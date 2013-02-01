@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -ex
+
+function git_clone {
+    [[ "$OFFLINE" = "True" ]] && return
+
+    GIT_REMOTE=$1
+    GIT_DEST=$2
+    GIT_REF=$3
+
+    BASE_SOURCE="source/${GIT_DEST##/*/}"
+    #echo $BASE_SOURCE
+
+    if [[ ! -d $BASE_SOURCE ]]; then
+        git clone $GIT_REMOTE $GIT_DEST
+        cp -r $GIT_DEST $BASE_SOURCE
+    else
+        cp -r $BASE_SOURCE $GIT_DEST
+    fi
+    cd $GIT_DEST
+    git fetch $GIT_REMOTE $GIT_REF && git checkout FETCH_HEAD
+}
+
+#git_clone $1 $2 $3
+
+# Wrapper for ``pip install`` to set cache and proxy environment variables
+# Uses globals ``OFFLINE``, ``PIP_DOWNLOAD_CACHE``, ``PIP_USE_MIRRORS``,
+#   ``TRACK_DEPENDS``, ``*_proxy`
+# pip_install package [package ...]
+function pip_install {
+
+    [[ "$OFFLINE" = "True" || -z "$@" ]] && return
+    if [[ ! -d $PIP_DOWNLOAD_CACHE ]]; then
+        mkdir $PIP_DOWNLOAD_CACHE
+    fi
+
+    SUDO_PIP="sudo"
+    CMD_PIP=$(which pip)
+    $SUDO_PIP PIP_DOWNLOAD_CACHE=${PIP_DOWNLOAD_CACHE:-/var/cache/pip} \
+        $CMD_PIP --default-timeout=3600 install --use-mirrors $@
+}
+
+function setup_develop() {
+
+    SUDO_CMD="sudo"
+    (cd $1; \
+        python setup.py egg_info; \
+        raw_links=$(awk '/^.+/ {print "-f " $1}' *.egg-info/dependency_links.txt); \
+        depend_links=$(echo $raw_links | xargs); \
+        require_file=$([ ! -r *-info/requires.txt ] || echo "-r *-info/requires.txt"); \
+        pip_install $require_file $depend_links; \
+        $SUDO_CMD \
+            python setup.py develop \
+    )
+}
+
