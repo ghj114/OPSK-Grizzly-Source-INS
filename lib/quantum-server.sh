@@ -5,6 +5,9 @@ set -ex
 source $TOP_DIR/settings
 source $TOP_DIR/functions
 
+if [[ "$1" == "q-svc" ]]; then
+    QUANTUM_SERVER=True
+fi
 # Set up default directories
 QUANTUM_DIR=$DEST/quantum
 QUANTUM_AUTH_CACHE_DIR=${QUANTUM_AUTH_CACHE_DIR:-/var/cache/quantum}
@@ -30,7 +33,7 @@ Q_RR_CONF_FILE=$QUANTUM_CONF_DIR/rootwrap.conf
 Q_RR_COMMAND="sudo $QUANTUM_ROOTWRAP $Q_RR_CONF_FILE"
 
 
-ENABLE_TENANT_TUNNELS=${ENABLE_TENANT_TUNNELS:-False}
+ENABLE_TENANT_TUNNELS=${ENABLE_TENANT_TUNNELS:-True}
 TENANT_TUNNEL_RANGES=${TENANT_TUNNEL_RANGE:-1:1000}
 ENABLE_TENANT_VLANS=${ENABLE_TENANT_VLANS:-False}
 TENANT_VLAN_RANGE=${TENANT_VLAN_RANGE:-}
@@ -109,27 +112,35 @@ function _configure_quantum_common() {
     _quantum_setup_rootwrap
 }
 
-# Configures keystone integration for quantum service and agents
-function _quantum_setup_keystone() {
-    local conf_file=$1
-    local section=$2
-    local use_auth_url=$3
-    if [[ -n $use_auth_url ]]; then
-        iniset $conf_file $section auth_url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_AUTH_HOST:$KEYSTONE_AUTH_PORT/v2.0"
+
+function quantum_plugin_configure_service() {
+    if [[ "$ENABLE_TENANT_TUNNELS" = "True" ]]; then
+        iniset /$Q_PLUGIN_CONF_FILE OVS tenant_network_type gre
+        iniset /$Q_PLUGIN_CONF_FILE OVS tunnel_id_ranges $TENANT_TUNNEL_RANGES
+    elif [[ "$ENABLE_TENANT_VLANS" = "True" ]]; then
+        iniset /$Q_PLUGIN_CONF_FILE OVS tenant_network_type vlan
     else
-        iniset $conf_file $section auth_host $KEYSTONE_SERVICE_HOST
-        iniset $conf_file $section auth_port $KEYSTONE_AUTH_PORT
-        iniset $conf_file $section auth_protocol $KEYSTONE_SERVICE_PROTOCOL
+        echo "WARNING - The openvswitch plugin is using local tenant networks, with no connectivity between hosts."
     fi
-    iniset $conf_file $section admin_tenant_name $SERVICE_TENANT_NAME
-    iniset $conf_file $section admin_user $Q_ADMIN_USERNAME
-    iniset $conf_file $section admin_password $SERVICE_PASSWORD
-    iniset $conf_file $section signing_dir $QUANTUM_AUTH_CACHE_DIR
-    # Create cache dir
-    sudo mkdir -p $QUANTUM_AUTH_CACHE_DIR
-    sudo chown $STACK_USER $QUANTUM_AUTH_CACHE_DIR
-    rm -f $QUANTUM_AUTH_CACHE_DIR/*
+
+    # Override ``OVS_VLAN_RANGES`` and ``OVS_BRIDGE_MAPPINGS`` in ``localrc``
+    # for more complex physical network configurations.
+    if [[ "$OVS_VLAN_RANGES" = "" ]] && [[ "$PHYSICAL_NETWORK" != "" ]]; then
+        OVS_VLAN_RANGES=$PHYSICAL_NETWORK
+        if [[ "$TENANT_VLAN_RANGE" != "" ]]; then
+            OVS_VLAN_RANGES=$OVS_VLAN_RANGES:$TENANT_VLAN_RANGE
+        fi
+    fi
+    if [[ "$OVS_VLAN_RANGES" != "" ]]; then
+        iniset /$Q_PLUGIN_CONF_FILE OVS network_vlan_ranges $OVS_VLAN_RANGES
+    fi
+
+    # Enable tunnel networks if selected
+    if [[ $OVS_ENABLE_TUNNELING = "True" ]]; then
+        iniset /$Q_PLUGIN_CONF_FILE OVS enable_tunneling True
+    fi
 }
+
 
 # configure_quantum()
 # Set common config for all quantum server and agents.
@@ -142,7 +153,7 @@ function configure_quantum() {
     #if is_service_enabled q-lbaas; then
     #    _configure_quantum_lbaas
     #fi
-    if is_service_enabled q-svc; then
+    if [[ $QUANTUM_SERVER = "True" ]]; then
         #_configure_quantum_service
         Q_API_PASTE_FILE=$QUANTUM_CONF_DIR/api-paste.ini
         Q_POLICY_FILE=$QUANTUM_CONF_DIR/policy.json
@@ -166,24 +177,44 @@ function configure_quantum() {
         iniset $QUANTUM_CONF DEFAULT allow_overlapping_ips $Q_ALLOW_OVERLAPPING_IP
 
         iniset $QUANTUM_CONF DEFAULT auth_strategy $Q_AUTH_STRATEGY
-        _quantum_setup_keystone $QUANTUM_CONF keystone_authtoken
+        #_quantum_setup_keystone $QUANTUM_CONF keystone_authtoken
+        iniset $QUANTUM_CONF keystone_authtoken auth_host $KEYSTONE_IP
+        iniset $QUANTUM_CONF keystone_authtoken auth_port $KEYSTONE_AUTH_PORT
+        iniset $QUANTUM_CONF keystone_authtoken auth_protocol $KEYSTONE_AUTH_PROTOCOL
+        iniset $QUANTUM_CONF keystone_authtoken admin_tenant_name $SERVICE_TENANT_NAME
+        iniset $QUANTUM_CONF keystone_authtoken admin_user $Q_ADMIN_USERNAME
+        iniset $QUANTUM_CONF keystone_authtoken admin_password $SERVICE_PASSWORD
+        iniset $QUANTUM_CONF keystone_authtoken signing_dir $QUANTUM_AUTH_CACHE_DIR
+        # Create cache dir
+        sudo mkdir -p $QUANTUM_AUTH_CACHE_DIR
+        rm -f $QUANTUM_AUTH_CACHE_DIR/*
+
         # Comment out keystone authtoken configuration in api-paste.ini
         # It is required to avoid any breakage in Quantum where the sample
         # api-paste.ini has authtoken configurations.
-        _quantum_commentout_keystone_authtoken $Q_API_PASTE_FILE filter:authtoken
+        #_quantum_commentout_keystone_authtoken $Q_API_PASTE_FILE filter:authtoken
+        inicomment $Q_API_PASTE_FILE filter:authtoken auth_host
+        inicomment $Q_API_PASTE_FILE filter:authtoken auth_port
+        inicomment $Q_API_PASTE_FILE filter:authtoken auth_protocol
+        inicomment $Q_API_PASTE_FILE filter:authtoken auth_url
 
+        inicomment $Q_API_PASTE_FILE filter:authtoken admin_tenant_name
+        inicomment $Q_API_PASTE_FILE filter:authtoken admin_user
+        inicomment $Q_API_PASTE_FILE filter:authtoken admin_password
+        inicomment $Q_API_PASTE_FILE filter:authtoken signing_dir
+        
         # Configure plugin
         quantum_plugin_configure_service
     fi
-    if is_service_enabled q-agt; then
-        _configure_quantum_plugin_agent
-    fi
-    if is_service_enabled q-dhcp; then
-        _configure_quantum_dhcp_agent
-    fi
-    if is_service_enabled q-l3; then
-        _configure_quantum_l3_agent
-    fi
+    #if is_service_enabled q-agt; then
+    #    _configure_quantum_plugin_agent
+    #fi
+    #if is_service_enabled q-dhcp; then
+    #    _configure_quantum_dhcp_agent
+    #fi
+    #if is_service_enabled q-l3; then
+    #    _configure_quantum_l3_agent
+    #fi
     #if is_service_enabled q-meta; then
     #    _configure_quantum_metadata_agent
     #fi
