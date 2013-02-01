@@ -13,12 +13,15 @@ lib/mysql.sh
 apt-get install -y rabbitmq-server
 echo "rabbitmq install over!";sleep 1
 
+tools/loaddown.sh 
+
+tools/setup.sh
+
 # 3. install keystoneclient and keystone
 apt-get install python-setuptools python-dev python-lxml python-pastescript python-pastedeploy python-paste sqlite3
 apt-get install python-pysqlite2 python-sqlalchemy python-mysqldb python-webob python-greenlet python-routes libldap2-dev libsasl2-dev python-bcrypt
 
 #install_keystoneclient
-lib/git_clone.sh
 install_keystone
 configure_keystoneclient
 configure_novaclient
@@ -38,7 +41,7 @@ install_cinder
 configure_cinderclient
 configure_cinder
 
-# 6. install quantumclent and quantum
+# 6. install quantumclient and quantum
 apt-get install btables iptables iputils-ping iputils-arping 
 apt-get install sudo python-boto python-iso8601 python-paste python-routes python-suds python-netaddr python-pastedeploy python-greenlet
 apt-get install python-kombu python-eventlet python-sqlalchemy python-mysqldb python-pyudev python-qpid # dist:precise

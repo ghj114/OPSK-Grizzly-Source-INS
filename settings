@@ -129,10 +129,56 @@ fi
 
 
 GIT_BASE=https://github.com
+DEST_DIR='/opt/openstack/lib'
 
 # keystone and keystoneclient
 KEYSTONE_REPO=${GIT_BASE}/openstack/keystone.git
 KEYSTONE_BRANCH=master
+KEYSTONE_DIR=${DEST_DIR}/keystone
 KEYSTONECLIENT_REPO=${GIT_BASE}/openstack/python-keystoneclient.git
 KEYSTONECLIENT_BRANCH=master
+KEYSTONECLIENT_DIR=${DEST_DIR}/python-keystoneclient
 
+# glance and glanceclient
+GLANCE_REPO=${GIT_BASE}/openstack/glance.git
+GLANCE_BRANCH=master
+GLANCE_DIR=${DEST_DIR}/glance
+GLANCECLIENT_REPO=${GIT_BASE}/openstack/python-glanceclient.git
+GLANCECLIENT_BRANCH=master
+GLANCECLIENT_DIR=${DEST_DIR}/python-glanceclient
+
+# cinder and cinderclient
+CINDER_REPO=${GIT_BASE}/openstack/cinder.git
+CINDER_BRANCH=master
+CINDER_DIR=${DEST_DIR}/cinder
+CINDERCLIENT_REPO=${GIT_BASE}/openstack/python-cinderclient.git
+CINDERCLIENT_BRANCH=master
+CINDERCLIENT_DIR=${DEST_DIR}/python-cinderclient
+
+# quantum and quantumclient
+QUANTUM_REPO=${GIT_BASE}/openstack/quantum.git
+QUANTUM_BRANCH=master
+QUANTUM_DIR=${DEST_DIR}/quantum
+QUANTUMCLIENT_REPO=${GIT_BASE}/openstack/python-quantumclient.git
+QUANTUMCLIENT_BRANCH=master
+QUANTUMCLIENT_DIR=${DEST_DIR}/python-quantumclient
+
+# nova and novaclient
+NOVA_REPO=${GIT_BASE}/openstack/nova.git
+NOVA_BRANCH=master
+NOVA_DIR=${DEST_DIR}/nova
+NOVACLIENT_REPO=${GIT_BASE}/openstack/python-novaclient.git
+NOVACLIENT_BRANCH=master
+NOVACLIENT_DIR=${DEST_DIR}/python-novaclient
+
+# noVNC
+NOVNC_REPO=${GIT_BASE}/kanaka/noVNC.git
+NOVNC_BRANCH=master
+NOVNC_DIR=${DEST_DIR}/noVNC
+
+# horizon
+HORIZON_REPO=${GIT_BASE}/openstack/horizon.git
+HORIZON_BRANCH=master
+HORIZON_DIR=${DEST_DIR}/horizon
+
+PIP_DOWNLOAD_CACHE='pip-download-cache'
