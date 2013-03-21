@@ -1,0 +1,138 @@
+#####################################################################
+# You can create a  settings.local file and override these settings #
+# from there, allowing you to `git pull` without conflicts!         #
+#####################################################################
+
+
+# hardWare
+#      name           nic                                   descri
+#     node1          eth0:192.168.0.10:manage network  controller node
+#                    eth1:10.1.199.7:external+api network                    
+#                    #eth2:192.168.200.53
+#                    #eth3:192.168.201.53
+#
+#     node2          eth0:192.168.0.11:manage network  network  node
+#                    eth1:10.10.10.1/24:data network
+#                    eth2:
+#                    #eth3:192.168.201.60
+#
+#     node3          eth0:10.1.199.7(Not required)     compute node
+#                    eth1:192.168.199.7
+#                    eth2:192.168.200.7
+#                    eth3:192.168.201.7
+
+
+#  network_type       device                                           network                         describe
+#----------------------------------------------------------------------------------------------------------------------------------
+#     gle/vlan         eth0(public/external network)          network1:10.1.199.120/29        The Floating IPS
+#
+#                      eth1 (private/internal networks)       network2:192.168.199.0/24       The service network: is used for the instance fixed IPs and to \
+#                                                                                                 create all the VLANs/subnets for the tenants.It is completely\
+#                                                                                                 managed by OpenStack.
+#                      eth2                                   network3:192.168.200.0/24       The OpenStack management network:is used for the communication \
+#                                                                                                 between the OpenStack components,the MySQL DB server,
+#                                                                                                 and the RabbitMQ messaging server.
+#                      eth3                                   network4:192.168.201.0/24       The storage network (volume network): is used for the iSCSI \
+#                                                                                                 volume traffic between the storage node (volume node) 
+#
+
+# MYPUB_IP="10.1.247.62"
+MYPRI_IP="192.168.0.53"
+MYDATA_IP="10.10.199.1"  # network node eth1: data net
+
+PUBLIC_NIC='eth2' # floating IP
+DATA_NIC='eth1' # fixed IP
+
+#======Controller Node======
+CONTROLLER_IP="192.168.0.7"       # management networks on eth1
+CONTROLLER_IP_PUB="10.1.199.7"
+
+#=====Computer Node=====
+COMPUTE_IP=$MYPRI_IP
+
+#=====Network Node=====
+NETWORK_IP=$MYPRI_IP
+
+QUANTUM_ENABLED=true
+QUANTUM_IP=$MYDATA_IP
+QUANTUM_IP_PUB=$CONTROLLER_IP_PUB
+
+# =====mysql=====
+#  HOST-IP           USER            PASSWORD
+#--------------------------------------------
+#                    root             root
+#                    nova             service
+#                    glance           service
+#                    keystone         service
+#                    horizon          service
+#                    cinder          service
+MYSQL_HOST=$CONTROLLER_IP
+MYSQL_ROOT_PASS="root"
+MYSQL_SERVICE_PASS="service"
+
+# =====keystone=====
+KEYSTONE_IP=$CONTROLLER_IP
+KEYSTONE_IP_PUB=$CONTROLLER_IP_PUB
+SERVICE_TOKEN="CentRin"
+SERVICE_ENDPOINT="http://$KEYSTONE_IP:35357/v2.0/"
+SERVICE_TENANT_NAME="service"
+ADMIN_PASSWORD="admin"
+SERVICE_PASSWORD="service"
+
+# =====glance=====
+GLANCE_IP=$CONTROLLER_IP
+GLANCE_IP_PUB=$CONTROLLER_IP_PUB
+
+# =====networking======
+
+NETWORK_TYPE="gre"               
+#NETWORK_TYPE="vlan"              
+INT_NET_GATEWAY='192.168.100.1'
+INT_NET_RANGE='192.168.100.0/24'
+EXT_NET_GATEWAY='10.1.199.1'
+EXT_NET_START='10.1.199.160'
+EXT_NET_END='10.1.199.165'
+EXT_NET_RANGE='10.1.199.0/24'
+
+# ======swift=====
+SWIFT_USED='False'  # 'True'/'False'
+#SWIFT_USED='True'  # 'True'/'False'
+SWIFT_IP=$CONTROLLER_IP
+
+# rabbitmq
+RABBITMQ_IP=$CONTROLLER_IP
+
+# cinder
+CINDER_IP=$CONTROLLER_IP
+
+# dashboard
+DASHBOARD_IP=$CONTROLLER_IP
+
+# Misc
+#REGION="nova"             # Region name - "nova" is the default, and probably the most reliable withoit extra setup!
+
+# Load overrides from settings.local if it exists
+if [ -f settings.local ]
+then
+  . settings.local
+fi
+
+# Dont change anything below here!
+#export NOVA_PROJECT_ID="admin" # Tenant
+#export NOVA_USERNAME="admin" # Username
+#export NOVA_API_KEY=$ADMIN_PASSWORD
+#export NOVA_URL="http://$HOST_IP:5000/v2.0/"
+#export NOVA_URL="http://$KEYSTONE_IP:5000/v2.0/"
+#export NOVA_VERSION=1.1
+#export NOVA_REGION_NAME=$REGION
+
+
+
+GIT_BASE=https://github.com
+
+# keystone and keystoneclient
+KEYSTONE_REPO=${GIT_BASE}/openstack/keystone.git
+KEYSTONE_BRANCH=master
+KEYSTONECLIENT_REPO=${GIT_BASE}/openstack/python-keystoneclient.git
+KEYSTONECLIENT_BRANCH=master
+
