@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# configure_keystone
+# init_keystone
+# start_keystone
+
 TOP_DIR=$(pwd)
 set -ex
 source $TOP_DIR/settings
@@ -8,8 +12,8 @@ source $TOP_DIR/functions
 # Set up default directories
 KEYSTONE_CONF_DIR=${KEYSTONE_CONF_DIR:-/etc/keystone}
 KEYSTONE_CONF=$KEYSTONE_CONF_DIR/keystone.conf
-KEYSTONE_PASTE_INI=${KEYSTONE_PASTE_INI:-$KEYSTONE_CONF_DIR/keystone-paste.ini}
 KEYSTONE_AUTH_CACHE_DIR=${KEYSTONE_AUTH_CACHE_DIR:-/var/cache/keystone}
+#KEYSTONE_PASTE_INI=${KEYSTONE_PASTE_INI:-$KEYSTONE_CONF_DIR/keystone-paste.ini}
 
 # configure_keystone() - Set config files, create data dirs, etc
 function configure_keystone() {
@@ -54,9 +58,6 @@ function init_keystone() {
 
 # start_keystone() - Start running processes, including screen
 function start_keystone() {
-    # Get right service port for testing
-    local service_port=$KEYSTONE_SERVICE_PORT
-
     # Start Keystone in a screen window
     #screen_it key "cd $KEYSTONE_DIR && $KEYSTONE_DIR/bin/keystone-all --config-file $KEYSTONE_CONF $KEYSTONE_LOG_CONFIG -d --debug"
     cd $KEYSTONE_DIR && ($KEYSTONE_DIR/bin/keystone-all --config-file $KEYSTONE_CONF $KEYSTONE_LOG_CONFIG -d --debug &)

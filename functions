@@ -56,7 +56,23 @@ function setup_develop() {
 }
 
 
+# Comment an option in an INI file
+# inicomment config-file section option
+function inicomment() {
+    local file=$1
+    local section=$2
+    local option=$3
+    sed -i -e "/^\[$section\]/,/^\[.*\]/ s|^\($option[ \t]*=.*$\)|#\1|" "$file"
+}
 
+# Uncomment an option in an INI file
+# iniuncomment config-file section option
+function iniuncomment() {
+    local file=$1
+    local section=$2
+    local option=$3
+    sed -i -e "/^\[$section\]/,/^\[.*\]/ s|[^ \t]*#[ \t]*\($option[ \t]*=.*$\)|\1|" "$file"
+}
 
 # Determinate is the given option present in the INI file
 # ini_has_option config-file section option

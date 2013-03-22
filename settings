@@ -131,6 +131,7 @@ fi
 GIT_BASE=https://github.com
 TOP_DIR=${TOP_DIR:-/root/openstack/OPSK-Grizzly-Source-INS}
 DEST_DIR='/opt/openstack/lib'
+DATA_DIR=${DATA_DIR:-/opt/openstack/data}
 PIP_DOWNLOAD_CACHE=${TOP_DIR}/pip-download-cache
 
 # keystone and keystoneclient
