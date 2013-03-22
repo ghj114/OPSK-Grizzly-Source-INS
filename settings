@@ -44,8 +44,8 @@ PUBLIC_NIC='eth2' # floating IP
 DATA_NIC='eth1' # fixed IP
 
 #======Controller Node======
-CONTROLLER_IP="192.168.0.7"       # management networks on eth1
-CONTROLLER_IP_PUB="10.1.199.7"
+CONTROLLER_IP="192.168.0.53"       # management networks on eth1
+CONTROLLER_IP_PUB="10.1.199.53"
 
 #=====Computer Node=====
 COMPUTE_IP=$MYPRI_IP
@@ -129,7 +129,9 @@ fi
 
 
 GIT_BASE=https://github.com
+TOP_DIR=${TOP_DIR:-/root/openstack/OPSK-Grizzly-Source-INS}
 DEST_DIR='/opt/openstack/lib'
+PIP_DOWNLOAD_CACHE=${TOP_DIR}/pip-download-cache
 
 # keystone and keystoneclient
 KEYSTONE_REPO=${GIT_BASE}/openstack/keystone.git
@@ -181,4 +183,3 @@ HORIZON_REPO=${GIT_BASE}/openstack/horizon.git
 HORIZON_BRANCH=master
 HORIZON_DIR=${DEST_DIR}/horizon
 
-PIP_DOWNLOAD_CACHE='pip-download-cache'

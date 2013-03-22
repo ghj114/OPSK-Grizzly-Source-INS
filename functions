@@ -9,8 +9,8 @@ function git_clone {
     GIT_DEST=$2
     GIT_REF=$3
 
-    BASE_SOURCE="source/${GIT_DEST##/*/}"
-    #echo $BASE_SOURCE
+    BASE_SOURCE=$TOP_DIR/source/${GIT_DEST##/*/}
+    echo $BASE_SOURCE
 
     if [[ ! -d $BASE_SOURCE ]]; then
         git clone $GIT_REMOTE $GIT_DEST
@@ -55,3 +55,38 @@ function setup_develop() {
     )
 }
 
+
+
+
+# Determinate is the given option present in the INI file
+# ini_has_option config-file section option
+function ini_has_option() {
+    local file=$1
+    local section=$2
+    local option=$3
+    local line
+    line=$(sed -ne "/^\[$section\]/,/^\[.*\]/ { /^$option[ \t]*=/ p; }" "$file")
+    [ -n "$line" ]
+}
+
+# Set an option in an INI file
+# iniset config-file section option value
+function iniset() {
+    local file=$1
+    local section=$2
+    local option=$3
+    local value=$4
+    if ! grep -q "^\[$section\]" "$file"; then
+        # Add section at the end
+        echo -e "\n[$section]" >>"$file"
+    fi
+    if ! ini_has_option "$file" "$section" "$option"; then
+        # Add it
+        sed -i -e "/^\[$section\]/ a\\
+$option = $value
+" "$file"
+    else
+        # Replace it
+        sed -i -e "/^\[$section\]/,/^\[.*\]/ s|^\($option[ \t]*=[ \t]*\).*$|\1$value|" "$file"
+    fi
+}
