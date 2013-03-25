@@ -17,16 +17,10 @@ echo "rabbitmq install over!";sleep 1
 lib/keystone.sh
 
 # 4. install glanceclient and glance
-install_glanceclient
-install_glance
-configure_glanceclient
-configure_glance
+lib/glance.sh
 
 # 5. install cinderclient and cinder
-install_cinderclient
-install_cinder
-configure_cinderclient
-configure_cinder
+lib/cinder.sh
 
 # 6. install quantumclient and quantum
 install_quantum_agent_packages # if is_service_enabled q-agt
@@ -37,14 +31,8 @@ setup_quantumclient
 setup_quantum
 
 # 7. install nova-api nova-scheduler
-install_novaclient
-install_nova
-git_clone $NOVNC_REPO $NOVNC_DIR $NOVNC_BRANCH
-configure_novaclient
-cleanup_nova
-configure_nova
-
-                 
+lib/nova-controller.sh
+lib/quantum-server.sh
 
 # 8. install horizon
 install_horizon
