@@ -7,6 +7,7 @@ source $TOP_DIR/functions
 
 # Set up default directories
 NOVA_DIR=${NOVA_DIR:-$DEST/nova}
+NOVA_BIN_DIR=$NOVA_DIR/bin
 NOVA_STATE_PATH=${NOVA_STATE_PATH:=$DATA_DIR/nova}
 # INSTANCES_PATH is the previous name for this
 NOVA_INSTANCES_PATH=${NOVA_INSTANCES_PATH:=${INSTANCES_PATH:=$NOVA_STATE_PATH/instances}}
@@ -19,6 +20,7 @@ NOVA_API_PASTE_INI=${NOVA_API_PASTE_INI:-$NOVA_CONF_DIR/api-paste.ini}
 # Public facing bits
 NOVA_SERVICE_HOST=${NOVA_SERVICE_HOST:-$SERVICE_HOST}
 NOVA_SERVICE_PORT=${NOVA_SERVICE_PORT:-8774}
+NOVA_ROOTWRAP=/usr/local/bin/nova-rootwrap
 
 
 
@@ -69,8 +71,8 @@ function create_nova_conf() {
     # (Re)create ``nova.conf``
     rm -f $NOVA_CONF
     echo "[DEFAULT]" >>$NOVA_CONF
-    iniset $NOVA_CONF DEFAULT verbose "True"
-    iniset $NOVA_CONF DEFAULT debug "True"
+    #iniset $NOVA_CONF DEFAULT verbose "True"
+    #iniset $NOVA_CONF DEFAULT debug "True"
     iniset $NOVA_CONF DEFAULT auth_strategy "keystone"
     iniset $NOVA_CONF DEFAULT allow_resize_to_same_host "True"
     iniset $NOVA_CONF DEFAULT api_paste_config "$NOVA_API_PASTE_INI"
