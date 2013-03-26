@@ -6,7 +6,7 @@ source $TOP_DIR/settings
 source $TOP_DIR/functions
 
 # Set up default directories
-QUANTUM_DIR=$DEST/quantum
+QUANTUM_DIR=$DEST_DIR/quantum
 QUANTUM_AUTH_CACHE_DIR=${QUANTUM_AUTH_CACHE_DIR:-/var/cache/quantum}
 
 QUANTUM_CONF_DIR=/etc/quantum
@@ -88,7 +88,7 @@ function _configure_quantum_common() {
     #quantum_plugin_configure_common
     Q_PLUGIN_CONF_PATH=etc/quantum/plugins/openvswitch
     Q_PLUGIN_CONF_FILENAME=ovs_quantum_plugin.ini
-    Q_DB_NAME="ovs_quantum"
+    Q_DB_NAME="quantum"
     Q_PLUGIN_CLASS="quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2"
 
     # If needed, move config file from ``$QUANTUM_DIR/etc/quantum`` to ``QUANTUM_CONF_DIR``
@@ -133,7 +133,7 @@ function _quantum_setup_keystone() {
     iniset $conf_file $section signing_dir $QUANTUM_AUTH_CACHE_DIR
     # Create cache dir
     sudo mkdir -p $QUANTUM_AUTH_CACHE_DIR
-    sudo chown $STACK_USER $QUANTUM_AUTH_CACHE_DIR
+    #sudo chown $STACK_USER $QUANTUM_AUTH_CACHE_DIR
     rm -f $QUANTUM_AUTH_CACHE_DIR/*
 }
 
