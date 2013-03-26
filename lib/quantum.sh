@@ -156,7 +156,7 @@ function _configure_quantum_service() {
         iniset $QUANTUM_CONF DEFAULT service_plugins $Q_SERVICE_PLUGIN_CLASSES
     fi
 
-    iniset $QUANTUM_CONF DEFAULT verbose True
+    iniset $QUANTUM_CONF DEFAULT verbose False 
     iniset $QUANTUM_CONF DEFAULT debug True
     iniset $QUANTUM_CONF DEFAULT policy_file $Q_POLICY_FILE
     iniset $QUANTUM_CONF DEFAULT allow_overlapping_ips $Q_ALLOW_OVERLAPPING_IP
