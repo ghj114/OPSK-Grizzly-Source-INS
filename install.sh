@@ -23,16 +23,11 @@ lib/glance.sh
 lib/cinder.sh
 
 # 6. install quantumclient and quantum
-install_quantum_agent_packages # if is_service_enabled q-agt
-install_quantumclient
-install_quantum
-install_quantum_third_party
-setup_quantumclient
-setup_quantum
+lib/quantum.sh
 
 # 7. install nova-api nova-scheduler
 lib/nova-controller.sh
-lib/quantum-server.sh
+lib/quantum.sh
 
 # 8. install horizon
 install_horizon
