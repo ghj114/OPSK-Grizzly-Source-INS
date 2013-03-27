@@ -11,6 +11,8 @@ QUANTUM_AUTH_CACHE_DIR=${QUANTUM_AUTH_CACHE_DIR:-/var/cache/quantum}
 
 QUANTUM_CONF_DIR=/etc/quantum
 QUANTUM_CONF=$QUANTUM_CONF_DIR/quantum.conf
+#QUANTUM_LOG=${QUANTUM_LOG:-/var/log/quantum}
+QUANTUM_LOG=$DATA_DIR/log/quantum
 export QUANTUM_TEST_CONFIG_FILE=${QUANTUM_TEST_CONFIG_FILE:-"$QUANTUM_CONF_DIR/debug.ini"}
 
 Q_PLUGIN=${Q_PLUGIN:-openvswitch}
@@ -28,7 +30,8 @@ Q_USE_SECGROUP=True
 
 QUANTUM_ROOTWRAP=/usr/local/bin/nova-rootwrap
 Q_RR_CONF_FILE=$QUANTUM_CONF_DIR/rootwrap.conf
-Q_RR_COMMAND="sudo $QUANTUM_ROOTWRAP $Q_RR_CONF_FILE"
+#Q_RR_COMMAND="sudo $QUANTUM_ROOTWRAP $Q_RR_CONF_FILE"
+Q_RR_COMMAND="sudo"
 
 
 ENABLE_TENANT_TUNNELS=${ENABLE_TENANT_TUNNELS:-True}
@@ -98,7 +101,8 @@ function _configure_quantum_common() {
 
     iniset /$Q_PLUGIN_CONF_FILE DATABASE sql_connection mysql://quantum:$MYSQL_SERVICE_PASS@$MYSQL_HOST/$Q_DB_NAME
     iniset $QUANTUM_CONF DEFAULT state_path $DATA_DIR/quantum
-
+    #LOG_FORMAT="%(asctime)s %(levelname)8s [%(name)s] %(message)s %(funcName)s %(pathname)s:%(lineno)d"
+    #iniset $QUANTUM_CONF DEFAULT log_format $LOG_FORMAT
     _quantum_setup_rootwrap
 }
 
@@ -123,9 +127,9 @@ function _quantum_setup_keystone() {
     if [[ -n $use_auth_url ]]; then
         iniset $conf_file $section auth_url "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_AUTH_HOST:$KEYSTONE_AUTH_PORT/v2.0"
     else
-        iniset $conf_file $section auth_host $KEYSTONE_SERVICE_HOST
+        iniset $conf_file $section auth_host $KEYSTONE_IP
         iniset $conf_file $section auth_port $KEYSTONE_AUTH_PORT
-        iniset $conf_file $section auth_protocol $KEYSTONE_SERVICE_PROTOCOL
+        iniset $conf_file $section auth_protocol $KEYSTONE_AUTH_PROTOCOL
     fi
     iniset $conf_file $section admin_tenant_name $SERVICE_TENANT_NAME
     iniset $conf_file $section admin_user $Q_ADMIN_USERNAME
@@ -162,21 +166,22 @@ function _configure_quantum_service() {
     iniset $QUANTUM_CONF DEFAULT allow_overlapping_ips $Q_ALLOW_OVERLAPPING_IP
 
     iniset $QUANTUM_CONF DEFAULT auth_strategy $Q_AUTH_STRATEGY
+    iniset $QUANTUM_CONF DEFAULT api_paste_config $Q_API_PASTE_FILE 
     _quantum_setup_keystone $QUANTUM_CONF keystone_authtoken
 
     # Comment out keystone authtoken configuration in api-paste.ini
     # It is required to avoid any breakage in Quantum where the sample
     # api-paste.ini has authtoken configurations.
     #_quantum_commentout_keystone_authtoken $Q_API_PASTE_FILE filter:authtoken
-    inicomment $Q_API_PASTE_FILE filter:authtoken auth_host
-    inicomment $Q_API_PASTE_FILE filter:authtoken auth_port
-    inicomment $Q_API_PASTE_FILE filter:authtoken auth_protocol
-    inicomment $Q_API_PASTE_FILE filter:authtoken auth_url
+    #inicomment $Q_API_PASTE_FILE filter:authtoken auth_host
+    #inicomment $Q_API_PASTE_FILE filter:authtoken auth_port
+    #inicomment $Q_API_PASTE_FILE filter:authtoken auth_protocol
+    #inicomment $Q_API_PASTE_FILE filter:authtoken auth_url
 
-    inicomment $Q_API_PASTE_FILE filter:authtoken admin_tenant_name
-    inicomment $Q_API_PASTE_FILE filter:authtoken admin_user
-    inicomment $Q_API_PASTE_FILE filter:authtoken admin_password
-    inicomment $Q_API_PASTE_FILE filter:authtoken signing_dir
+    #inicomment $Q_API_PASTE_FILE filter:authtoken admin_tenant_name
+    #inicomment $Q_API_PASTE_FILE filter:authtoken admin_user
+    #inicomment $Q_API_PASTE_FILE filter:authtoken admin_password
+    #inicomment $Q_API_PASTE_FILE filter:authtoken signing_dir
     
     # Configure plugin
     quantum_plugin_configure_service
@@ -315,12 +320,19 @@ function init_quantum() {
 function start_quantum_service_and_check() {
     # Start the Quantum service
     #screen_it q-svc "cd $QUANTUM_DIR && python $QUANTUM_DIR/bin/quantum-server --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE"
-    cd $QUANTUM_DIR && (python $QUANTUM_DIR/bin/quantum-server --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE &)
+    if [[ ! -d $QUANTUM_LOG ]]; then
+        sudo mkdir -p $QUANTUM_LOG
+    fi
+    cd $QUANTUM_DIR && (python $QUANTUM_DIR/bin/quantum-server --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE --log-file $QUANTUM_LOG/q-server.log &)
     echo "Waiting for Quantum to start..."
     sleep 5
 }
 
 function create_quantum_initial_network() {
+    export SERVICE_TOKEN=$SERVICE_TOKEN
+    export SERVICE_ENDPOINT=$SERVICE_ENDPOINT 
+    #export SERVICE_TOKEN=CentRin
+    #export SERVICE_ENDPOINT=http://192.168.0.7:35357/v2.0/
     TENANT_ID=$(keystone tenant-list | grep " admin " | get_field 1)
 
     # Create a small network
@@ -364,9 +376,12 @@ function create_quantum_initial_network() {
 # Start running processes, including screen
 function start_quantum_agents() {
     # Start up the quantum agents if enabled
-    cd $QUANTUM_DIR && (python $AGENT_BINARY --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE &)
-    cd $QUANTUM_DIR && (python $AGENT_DHCP_BINARY --config-file $QUANTUM_CONF --config-file=$Q_DHCP_CONF_FILE &)
-    cd $QUANTUM_DIR && (python $AGENT_L3_BINARY --config-file $QUANTUM_CONF --config-file=$Q_L3_CONF_FILE &)
+    if [[ ! -d $QUANTUM_LOG ]]; then
+        sudo mkdir -p $QUANTUM_LOG
+    fi
+    cd $QUANTUM_DIR && (python $AGENT_BINARY --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE --log-file $QUANTUM_LOG/q-agent.log &)
+    cd $QUANTUM_DIR && (python $AGENT_DHCP_BINARY --config-file $QUANTUM_CONF --config-file=$Q_DHCP_CONF_FILE --log-file $QUANTUM_LOG/q-dhcp-agent.log &)
+    cd $QUANTUM_DIR && (python $AGENT_L3_BINARY --config-file $QUANTUM_CONF --config-file=$Q_L3_CONF_FILE --log-file $QUANTUM_LOG/q-l3-agent.log &)
     #screen_it q-meta "cd $QUANTUM_DIR && python $AGENT_META_BINARY --config-file $QUANTUM_CONF --config-file=$Q_META_CONF_FILE"
     #screen_it q-lbaas "cd $QUANTUM_DIR && python $AGENT_LBAAS_BINARY --config-file $QUANTUM_CONF --config-file=$LBAAS_AGENT_CONF_FILENAME"
 }

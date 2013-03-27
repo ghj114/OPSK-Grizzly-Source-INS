@@ -48,13 +48,14 @@ CONTROLLER_IP="192.168.0.53"       # management networks on eth1
 CONTROLLER_IP_PUB="10.1.199.53"
 # Set the default Nova APIs to enable
 #NOVA_ENABLED_APIS=ec2,osapi_compute,metadata
+QUANTUM_SERVER=False
+QUANTUM_NETWORK_NODE=True
+QUANTUM_AGENT=True
+QUANTUM_DHCP=True
+QUANTUM_L3=True
+
 NOVA_ENABLED_APIS=osapi_compute
 LIBVIRT_TYPE=kvm
-QUANTUM_SERVER=True
-QUANTUM_NETWORK_NODE=False
-QUANTUM_AGENT=False
-QUANTUM_DHCP=False
-QUANTUM_L3=False
 
 #=====Computer Node=====
 COMPUTE_IP=$MYPRI_IP
