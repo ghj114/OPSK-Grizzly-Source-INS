@@ -47,14 +47,14 @@ DATA_NIC='eth1' # fixed IP
 CONTROLLER_IP="192.168.0.53"       # management networks on eth1
 CONTROLLER_IP_PUB="10.1.199.53"
 
-CONTROLLER_NODE=True
-COMPUTE_NODE=False
+CONTROLLER_NODE=False
+COMPUTE_NODE=True
 
 QUANTUM_SERVER=False
 QUANTUM_NETWORK_NODE=True
 QUANTUM_AGENT=True
-QUANTUM_DHCP=True
-QUANTUM_L3=True
+QUANTUM_DHCP=False
+QUANTUM_L3=False
 
 # Set the default Nova APIs to enable
 #NOVA_ENABLED_APIS=ec2,osapi_compute,metadata

@@ -11,6 +11,7 @@ NOVA_BIN_DIR=$NOVA_DIR/bin
 NOVA_STATE_PATH=${NOVA_STATE_PATH:=$DATA_DIR/nova}
 # INSTANCES_PATH is the previous name for this
 NOVA_INSTANCES_PATH=${NOVA_INSTANCES_PATH:=${INSTANCES_PATH:=$NOVA_STATE_PATH/instances}}
+INSTANCE_NAME_PREFIX=instance-
 NOVA_AUTH_CACHE_DIR=${NOVA_AUTH_CACHE_DIR:-/var/cache/nova}
 NOVA_LOG=$DATA_DIR/log/nova
 
@@ -182,7 +183,7 @@ function create_nova_conf_quantum() {
     iniset $NOVA_CONF DEFAULT quantum_admin_auth_url "$KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_IP:$KEYSTONE_AUTH_PORT/v2.0"
     iniset $NOVA_CONF DEFAULT quantum_auth_strategy "keystone"
     iniset $NOVA_CONF DEFAULT quantum_admin_tenant_name "$SERVICE_TENANT_NAME"
-    iniset $NOVA_CONF DEFAULT quantum_url "http://$CONTROLLER:9696"
+    iniset $NOVA_CONF DEFAULT quantum_url "http://$CONTROLLER_IP:9696"
 
     iniset $NOVA_CONF DEFAULT libvirt_vif_driver "nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver"
     iniset $NOVA_CONF DEFAULT linuxnet_interface_driver "nova.network.linux_net.LinuxOVSInterfaceDriver"

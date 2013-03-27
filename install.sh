@@ -30,8 +30,7 @@ lib/nova-controller.sh
 lib/quantum.sh
 
 # 8. install horizon
-install_horizon
-configure_horizon
+lib/horizon.sh
 
 # 9. install nova-compute.sh
 lib/nova.sh
