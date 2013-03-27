@@ -33,3 +33,8 @@ lib/quantum.sh
 install_horizon
 configure_horizon
 
+# 9. install nova-compute.sh
+lib/nova.sh
+lib/quantum.sh
+
+

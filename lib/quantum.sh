@@ -379,9 +379,15 @@ function start_quantum_agents() {
     if [[ ! -d $QUANTUM_LOG ]]; then
         sudo mkdir -p $QUANTUM_LOG
     fi
-    cd $QUANTUM_DIR && (python $AGENT_BINARY --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE --log-file $QUANTUM_LOG/q-agent.log &)
-    cd $QUANTUM_DIR && (python $AGENT_DHCP_BINARY --config-file $QUANTUM_CONF --config-file=$Q_DHCP_CONF_FILE --log-file $QUANTUM_LOG/q-dhcp-agent.log &)
-    cd $QUANTUM_DIR && (python $AGENT_L3_BINARY --config-file $QUANTUM_CONF --config-file=$Q_L3_CONF_FILE --log-file $QUANTUM_LOG/q-l3-agent.log &)
+    if [[ $QUANTUM_AGENT = "True" ]]; then
+        cd $QUANTUM_DIR && (python $AGENT_BINARY --config-file $QUANTUM_CONF --config-file /$Q_PLUGIN_CONF_FILE --log-file $QUANTUM_LOG/q-agent.log &)
+    fi
+    if [[ $QUANTUM_DHCP = "True" ]]; then
+        cd $QUANTUM_DIR && (python $AGENT_DHCP_BINARY --config-file $QUANTUM_CONF --config-file=$Q_DHCP_CONF_FILE --log-file $QUANTUM_LOG/q-dhcp-agent.log &)
+    fi
+    if [[ $QUANTUM_L3 = "True" ]]; then
+        cd $QUANTUM_DIR && (python $AGENT_L3_BINARY --config-file $QUANTUM_CONF --config-file=$Q_L3_CONF_FILE --log-file $QUANTUM_LOG/q-l3-agent.log &)
+    fi
     #screen_it q-meta "cd $QUANTUM_DIR && python $AGENT_META_BINARY --config-file $QUANTUM_CONF --config-file=$Q_META_CONF_FILE"
     #screen_it q-lbaas "cd $QUANTUM_DIR && python $AGENT_LBAAS_BINARY --config-file $QUANTUM_CONF --config-file=$LBAAS_AGENT_CONF_FILENAME"
 }

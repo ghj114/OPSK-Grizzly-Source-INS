@@ -12,6 +12,7 @@ NOVA_STATE_PATH=${NOVA_STATE_PATH:=$DATA_DIR/nova}
 # INSTANCES_PATH is the previous name for this
 NOVA_INSTANCES_PATH=${NOVA_INSTANCES_PATH:=${INSTANCES_PATH:=$NOVA_STATE_PATH/instances}}
 NOVA_AUTH_CACHE_DIR=${NOVA_AUTH_CACHE_DIR:-/var/cache/nova}
+NOVA_LOG=$DATA_DIR/log/nova
 
 NOVA_CONF_DIR=/etc/nova
 NOVA_CONF=$NOVA_CONF_DIR/nova.conf
@@ -60,6 +61,52 @@ function configure_nova() {
     iniset $NOVA_API_PASTE_INI filter:authtoken admin_password $SERVICE_PASSWORD
     iniset $NOVA_API_PASTE_INI filter:authtoken signing_dir $NOVA_AUTH_CACHE_DIR
 
+    if [ "$COMPUTE_NODE" == "True" ]; then
+        # Force IP forwarding on, just on case
+        sudo sysctl -w net.ipv4.ip_forward=1
+
+        # Attempt to load modules: network block device - used to manage qcow images
+        sudo modprobe nbd || true
+
+        # Check for kvm (hardware based virtualization).  If unable to initialize
+        # kvm, we drop back to the slower emulation mode (qemu).  Note: many systems
+        # come with hardware virtualization disabled in BIOS.
+        if [[ "$LIBVIRT_TYPE" == "kvm" ]]; then
+            sudo modprobe kvm || true
+            if [ ! -e /dev/kvm ]; then
+                echo "WARNING: Switching to QEMU"
+                LIBVIRT_TYPE=qemu
+                if which selinuxenabled 2>&1 > /dev/null && selinuxenabled; then
+                    # https://bugzilla.redhat.com/show_bug.cgi?id=753589
+                    sudo setsebool virt_use_execmem on
+                fi
+            fi
+        fi
+        # The user that nova runs as needs to be member of **libvirtd** group otherwise
+        # nova-compute will be unable to use libvirt.
+        #if ! getent group libvirtd >/dev/null; then
+        #    sudo groupadd libvirtd
+        #fi
+        #add_user_to_group $STACK_USER libvirtd
+
+        # libvirt detects various settings on startup, as we potentially changed
+        # the system configuration (modules, filesystems), we need to restart
+        # libvirt to detect those changes.
+
+        LIBVIRT_DAEMON=libvirt-bin
+        sed -i '/#listen_tls/s/#listen_tls/listen_tls/; /#listen_tcp/s/#listen_tcp/listen_tcp/; /#auth_tcp/s/#auth_tcp/auth_tcp/; /auth_tcp/s/sasl/none/'  /etc/libvirt/libvirtd.conf
+        sed -i '/env libvirtd_opts/s/-d/-d -l/' /etc/init/libvirt-bin.conf
+        sed -i '/libvirtd_opts/s/-d/-d -l/' /etc/default/libvirt-bin
+        service $LIBVIRT_DAEMON restart
+        virsh net-destroy default
+        virsh net-undefine default
+
+
+        # Instance Storage
+        # ----------------
+        # Nova stores each instance in its own directory.
+        mkdir -p $NOVA_INSTANCES_PATH
+    fi
 }
 
 
@@ -71,8 +118,8 @@ function create_nova_conf() {
     # (Re)create ``nova.conf``
     rm -f $NOVA_CONF
     echo "[DEFAULT]" >>$NOVA_CONF
-    #iniset $NOVA_CONF DEFAULT verbose "True"
-    #iniset $NOVA_CONF DEFAULT debug "True"
+    iniset $NOVA_CONF DEFAULT verbose "True"
+    iniset $NOVA_CONF DEFAULT debug "True"
     iniset $NOVA_CONF DEFAULT auth_strategy "keystone"
     iniset $NOVA_CONF DEFAULT allow_resize_to_same_host "True"
     iniset $NOVA_CONF DEFAULT api_paste_config "$NOVA_API_PASTE_INI"
@@ -112,6 +159,11 @@ function create_nova_conf() {
     iniset $NOVA_CONF DEFAULT vnc_enabled true
     iniset $NOVA_CONF DEFAULT vncserver_listen "$VNCSERVER_LISTEN"
     iniset $NOVA_CONF DEFAULT vncserver_proxyclient_address "$VNCSERVER_PROXYCLIENT_ADDRESS"
+
+    if [ "$COMPUTE_NODE" == "True" ]; then
+        NOVNCPROXY_URL=${NOVNCPROXY_URL:-"http://$CONTROLLER_IP:6080/vnc_auto.html"}
+        iniset $NOVA_CONF DEFAULT novncproxy_base_url "$NOVNCPROXY_URL"
+    fi
     
     #iniset $NOVA_CONF DEFAULT ec2_dmz_host "$EC2_DMZ_HOST"
     #iniset_rpc_backend nova $NOVA_CONF DEFAULT
@@ -155,18 +207,29 @@ function start_nova() {
     # The group **libvirtd** is added to the current user in this script.
     # Use 'sg' to execute nova-compute as a member of the **libvirtd** group.
     # ``screen_it`` checks ``is_service_enabled``, it is not needed here
-    cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-api &)
-    cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-conductor &)
-    cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-cert &)
-    cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-scheduler &)
-    cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-novncproxy --config-file $NOVA_CONF --web $NOVNC_DIR &)
-    cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-consoleauth &)
+    # Start up the quantum agents if enabled
+    if [[ ! -d $NOVA_LOG ]]; then
+        sudo mkdir -p $NOVA_LOG
+    fi
+    if [ "$CONTROLLER_NODE" == "True" ]; then
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-api --log-file $NOVA_LOG/nova-api.log &)
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-conductor --log-file $NOVA_LOG/nova-conductor.log &)
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-cert --log-file $NOVA_LOG/nova-cert.log &)
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-scheduler --log-file $NOVA_LOG/nova-scheduler.log &)
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-novncproxy --config-file $NOVA_CONF --web $NOVNC_DIR &)
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-consoleauth --log-file $NOVA_LOG/nova-consoleauth.log &)
+    else
+        cd $NOVA_DIR && ($NOVA_BIN_DIR/nova-compute --log-file $NOVA_LOG/nova-compute.log &)
+    fi
+
 }
 
 configure_nova
 create_nova_conf
 create_nova_conf_quantum
-init_nova
+if [ "$CONTROLLER_NODE" == "True" ]; then
+    init_nova
+fi
 start_nova
 
 echo "nova-controller install over!"
