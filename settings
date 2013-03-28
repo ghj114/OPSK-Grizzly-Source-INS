@@ -6,20 +6,20 @@
 
 # hardWare
 #      name           nic                                   descri
-#     node1          eth0:192.168.0.10:manage network  controller node
+#     node1          eth0:192.168.0.7:manage network  controller node
 #                    eth1:10.1.199.7:external+api network                    
-#                    #eth2:192.168.200.53
-#                    #eth3:192.168.201.53
+#                    #eth2:
+#                    #eth3:
 #
-#     node2          eth0:192.168.0.11:manage network  network  node
-#                    eth1:10.10.10.1/24:data network
-#                    eth2:
-#                    #eth3:192.168.201.60
+#     node2          eth0:192.168.0.53:manage network  network  node
+#                    eth1:10.10.199.1/24:data network
+#                    eth2:10.1.199.53/24:external+api network(can not set ip initial)
+#                    #eth3:
 #
-#     node3          eth0:10.1.199.7(Not required)     compute node
-#                    eth1:192.168.199.7
-#                    eth2:192.168.200.7
-#                    eth3:192.168.201.7
+#     node3          eth0:192.168.0.60(Not required)     compute node
+#                    eth1:10.10.199.2/24:data network
+#                    #eth2:
+#                    #eth3:10.1.199.60
 
 
 #  network_type       device                                           network                         describe
@@ -37,22 +37,24 @@
 #
 
 # MYPUB_IP="10.1.247.62"
-MYPRI_IP="192.168.0.53"
+MYPRI_IP="192.168.0.7"
 MYDATA_IP="10.10.199.1"  # network node eth1: data net
 
 PUBLIC_NIC='eth2' # floating IP
 DATA_NIC='eth1' # fixed IP
 
 #======Controller Node======
-CONTROLLER_IP="192.168.0.53"       # management networks on eth1
-CONTROLLER_IP_PUB="10.1.199.53"
+CONTROLLER_IP="192.168.0.7"       # management networks on eth1
+CONTROLLER_IP_PUB="10.1.199.7"
 
-CONTROLLER_NODE=False
-COMPUTE_NODE=True
+#CONTROLLER_NODE=False
+#COMPUTE_NODE=True
+CONTROLLER_NODE=True
+COMPUTE_NODE=False
+NETWORK_NODE=False
 
-QUANTUM_SERVER=False
-QUANTUM_NETWORK_NODE=True
-QUANTUM_AGENT=True
+QUANTUM_SERVER=True
+QUANTUM_AGENT=False
 QUANTUM_DHCP=False
 QUANTUM_L3=False
 

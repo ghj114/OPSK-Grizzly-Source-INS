@@ -397,7 +397,7 @@ init_quantum
 if [[ $QUANTUM_SERVER = "True" ]]; then
     start_quantum_service_and_check
 fi
-if [[ $QUANTUM_NETWORK_NODE = "True" ]]; then
+if [[ $NETWORK_NODE = "True" ]]; then
     create_quantum_initial_network
     #setup_quantum_debug
     start_quantum_agents
