@@ -13,8 +13,8 @@ HORIZON_DIR=$DEST_DIR/horizon
 # current user and his default group.
 #APACHE_USER=${APACHE_USER:-$USER}
 #APACHE_GROUP=${APACHE_GROUP:-$(id -gn $APACHE_USER)}
-APACHE_USER=daemon
-APACHE_GROUP=daemon
+APACHE_USER=horizon
+APACHE_GROUP=horizon
 
 #function install_horizon() {
     # Apache installation, because we mark it NOPRIME
@@ -27,6 +27,17 @@ APACHE_GROUP=daemon
     #fi
 #}
 
+function create_user() {
+    local tp_user=$1     
+    if ! getent group $tp_user >/dev/null; then
+        echo "Creating a group called $tp_user"
+        groupadd $tp_user
+    fi
+    if ! getent passwd $tp_user >/dev/null; then
+        echo "Creating a user called $tp_user"
+        useradd -g $tp_user -s /bin/bash -d $DEST_DIR -m $tp_user
+    fi
+}
 
 # init_horizon() - Initialize databases, etc.
 function init_horizon() {
@@ -50,6 +61,7 @@ function init_horizon() {
 
     # Create an empty directory that apache uses as docroot
     sudo mkdir -p $HORIZON_DIR/.blackhole
+    chown -R horizon: $DEST_DIR/horizon
 
 
     APACHE_NAME=apache2
@@ -73,6 +85,7 @@ function init_horizon() {
 
 }
 
+create_user horizon
 init_horizon
 service apache2 restart
 echo "dashboard install over!"
