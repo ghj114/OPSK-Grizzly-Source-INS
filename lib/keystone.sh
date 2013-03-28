@@ -60,7 +60,7 @@ function init_keystone() {
 function start_keystone() {
     # Start Keystone in a screen window
     #screen_it key "cd $KEYSTONE_DIR && $KEYSTONE_DIR/bin/keystone-all --config-file $KEYSTONE_CONF $KEYSTONE_LOG_CONFIG -d --debug"
-    cd $KEYSTONE_DIR && ($KEYSTONE_DIR/bin/keystone-all --config-file $KEYSTONE_CONF $KEYSTONE_LOG_CONFIG -d --debug &)
+    cd $KEYSTONE_DIR && ($KEYSTONE_DIR/bin/keystone-all --config-file $KEYSTONE_CONF $KEYSTONE_LOG_CONFIG -d &)
     echo "Waiting for keystone to start..."
     sleep 10
 }

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-source settings
-source functions
+TOP_DIR=$(pwd)
+set -ex
+source $TOP_DIR/settings
+source $TOP_DIR/functions
 
 setup_develop $KEYSTONECLIENT_DIR 
 setup_develop $GLANCECLIENT_DIR 
