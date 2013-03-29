@@ -11,10 +11,18 @@ setup_develop $CINDERCLIENT_DIR
 setup_develop $QUANTUMCLIENT_DIR 
 setup_develop $NOVACLIENT_DIR 
 
-setup_develop $KEYSTONE_DIR 
-setup_develop $GLANCE_DIR 
-setup_develop $CINDER_DIR 
-setup_develop $QUANTUM_DIR 
-setup_develop $NOVA_DIR 
-#setup_develop $NOVNC_DIR 
-setup_develop $HORIZON_DIR 
+if [[ $CONTROLLER_NODE = "True" ]]; then
+    setup_develop $KEYSTONE_DIR 
+    setup_develop $GLANCE_DIR 
+    setup_develop $CINDER_DIR 
+    setup_develop $NOVA_DIR 
+    setup_develop $QUANTUM_DIR 
+    #setup_develop $NOVNC_DIR 
+    setup_develop $HORIZON_DIR 
+fi
+if [[ $NETWORK_NODE = "True" ]]; then
+    setup_develop $QUANTUM_DIR 
+fi
+if [[ $COMPUTE_NODE = "True" ]]; then
+    setup_develop $NOVA_DIR 
+fi
