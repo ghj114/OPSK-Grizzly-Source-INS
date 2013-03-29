@@ -20,7 +20,7 @@ Q_PORT=${Q_PORT:-9696}
 Q_HOST=${Q_HOST:-$HOST_IP}
 Q_ADMIN_USERNAME=${Q_ADMIN_USERNAME:-quantum}
 Q_AUTH_STRATEGY=${Q_AUTH_STRATEGY:-keystone}
-Q_USE_NAMESPACE=${Q_USE_NAMESPACE:-False}
+Q_USE_NAMESPACE=${Q_USE_NAMESPACE:-True}
 Q_USE_ROOTWRAP=${Q_USE_ROOTWRAP:-True}
 Q_META_DATA_IP=${Q_META_DATA_IP:-$HOST_IP}
 Q_ALLOW_OVERLAPPING_IP=${Q_ALLOW_OVERLAPPING_IP:-True}
@@ -276,6 +276,7 @@ function _configure_quantum_l3_agent() {
     iniset $Q_L3_CONF_FILE DEFAULT external_network_bridge $PUBLIC_BRIDGE
     quantum-ovs-cleanup
     sudo ovs-vsctl --no-wait -- --may-exist add-br $PUBLIC_BRIDGE
+    sudo ovs-vsctl add-port $PUBLIC_BRIDGE $PUBLIC_NIC
     # ensure no IP is configured on the public bridge
     sudo ip addr flush dev $PUBLIC_BRIDGE
     iniset $Q_L3_CONF_FILE DEFAULT l3_agent_manager quantum.agent.l3_agent.L3NATAgentWithStateReport
@@ -353,13 +354,16 @@ function create_quantum_initial_network() {
         quantum router-interface-add $ROUTER_ID $SUBNET_ID
         # Create an external network, and a subnet. Configure the external network as router gw
         EXT_NET_ID=$(quantum net-create "$PUBLIC_NETWORK_NAME" -- --router:external=True | grep ' id ' | get_field 2)
-        EXT_GW_IP=$(quantum subnet-create --ip_version 4 ${Q_FLOATING_ALLOCATION_POOL:+--allocation-pool $Q_FLOATING_ALLOCATION_POOL} $EXT_NET_ID $FLOATING_RANGE -- --enable_dhcp=False | grep 'gateway_ip' | get_field 2)
+        quantum subnet-create --ip_version 4 --allocation-pool start=$EXT_NET_START,end=$EXT_NET_END \
+    	                      --gateway $EXT_NET_GATEWAY $EXT_NET_ID $EXT_NET_RANGE -- --enable_dhcp=False
+        #EXT_GW_IP=$(quantum subnet-create --ip_version 4 ${Q_FLOATING_ALLOCATION_POOL:+--allocation-pool $Q_FLOATING_ALLOCATION_POOL} $EXT_NET_ID $FLOATING_RANGE -- --enable_dhcp=False | grep 'gateway_ip' | get_field 2)
         quantum router-gateway-set $ROUTER_ID $EXT_NET_ID
 
         if [[ "$QUANTUM_L3" == "True" ]]; then
             # logic is specific to using the l3-agent for l3
             if [[ "$Q_USE_NAMESPACE" = "True" ]]; then
-                CIDR_LEN=${FLOATING_RANGE#*/}
+                #CIDR_LEN=${FLOATING_RANGE#*/}
+                CIDR_LEN=${EXT_NET_RANGE#*/}
                 sudo ip addr add $EXT_GW_IP/$CIDR_LEN dev $PUBLIC_BRIDGE
                 sudo ip link set $PUBLIC_BRIDGE up
                 ROUTER_GW_IP=`quantum port-list -c fixed_ips -c device_owner | grep router_gateway | awk -F '"' '{ print $8; }'`
