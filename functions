@@ -19,7 +19,7 @@ function git_clone {
         if [[ ! -d $GIT_DEST ]]; then
             mkdir -p $GIT_DEST
         fi
-        cp -r $BASE_SOURCE $GIT_DEST
+        cp -r $BASE_SOURCE -T $GIT_DEST
     fi
     cd $GIT_DEST
     git fetch $GIT_REMOTE $GIT_REF && git checkout FETCH_HEAD
