@@ -60,6 +60,7 @@ if [[ $CONTROLLER_NODE = "True" ]]; then
     apt-get install -y python-webob python-kombu pylint pep8 python-eventlet python-nose python-sphinx python-mox python-kombu python-coverage python-cherrypy3 # why?
     apt-get install -y python-migrate nodejs nodejs-legacy # dist:quantal
     apt-get install -y python-netaddr
+    apt-get install -y nodejs
 fi
 
 

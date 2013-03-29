@@ -22,11 +22,11 @@ lib/glance.sh
 # 5. install cinderclient and cinder
 lib/cinder.sh
 
-# 6. install quantumclient and quantum
+# 6. install NETWORK NODE: quantumclient and quantum
 lib/quantum.sh
 
 # 7. install nova-api nova-scheduler
-lib/nova-controller.sh
+lib/nova.sh
 lib/quantum.sh
 
 # 8. install horizon
