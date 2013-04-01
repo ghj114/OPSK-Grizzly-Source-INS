@@ -156,7 +156,7 @@ function create_nova_conf() {
     iniset $NOVA_CONF DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_name)s] %(instance)s%(message)s"
 
     VNCSERVER_LISTEN=${VNCSERVER_LISTEN=0.0.0.0}
-    VNCSERVER_PROXYCLIENT_ADDRESS=$CONTROLLER_IP
+    VNCSERVER_PROXYCLIENT_ADDRESS=$COMPUTE_IP
     iniset $NOVA_CONF DEFAULT vnc_enabled true
     iniset $NOVA_CONF DEFAULT vncserver_listen "$VNCSERVER_LISTEN"
     iniset $NOVA_CONF DEFAULT vncserver_proxyclient_address "$VNCSERVER_PROXYCLIENT_ADDRESS"
