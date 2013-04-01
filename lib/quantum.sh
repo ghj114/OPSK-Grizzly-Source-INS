@@ -332,6 +332,11 @@ function start_quantum_service_and_check() {
 function create_quantum_initial_network() {
     export SERVICE_TOKEN=$SERVICE_TOKEN
     export SERVICE_ENDPOINT=$SERVICE_ENDPOINT 
+    export OS_TENANT_NAME=admin
+    export OS_USERNAME=admin
+    export OS_PASSWORD=admin
+    export OS_AUTH_URL=http://192.168.0.7:5000/v2.0/
+    export OS_REGION_NAME=RegionOne
     #export SERVICE_TOKEN=CentRin
     #export SERVICE_ENDPOINT=http://192.168.0.7:35357/v2.0/
     TENANT_ID=$(keystone tenant-list | grep " admin " | get_field 1)
