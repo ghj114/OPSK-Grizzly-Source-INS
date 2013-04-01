@@ -411,6 +411,9 @@ if [[ $NETWORK_NODE = "True" ]]; then
     #setup_quantum_debug
     start_quantum_agents
 fi
+#if [[ $COMPUTE_NODE= "True" ]]; then
+#    start_quantum_service_and_check
+#fi
 
 echo "quantum is installed over!"
 sleep 1

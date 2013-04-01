@@ -66,6 +66,7 @@ fi
 
 if [[ $COMPUTE_NODE = "True" ]]; then
     apt-get install -y lvm2 open-iscsi open-iscsi-utils genisoimage sysfsutils sg3-utils # nova-compute
+    apt-get install -y openvswitch-switch
 fi
 
 
