@@ -103,6 +103,7 @@ function _configure_quantum_common() {
     iniset $QUANTUM_CONF DEFAULT state_path $DATA_DIR/quantum
     #LOG_FORMAT="%(asctime)s %(levelname)8s [%(name)s] %(message)s %(funcName)s %(pathname)s:%(lineno)d"
     #iniset $QUANTUM_CONF DEFAULT log_format $LOG_FORMAT
+    _quantum_setup_keystone $QUANTUM_CONF keystone_authtoken
     _quantum_setup_rootwrap
 }
 
@@ -409,8 +410,9 @@ fi
 if [[ $NETWORK_NODE = "True" ]]; then
     create_quantum_initial_network
     #setup_quantum_debug
-    start_quantum_agents
 fi
+
+start_quantum_agents
 #if [[ $COMPUTE_NODE= "True" ]]; then
 #    start_quantum_service_and_check
 #fi
