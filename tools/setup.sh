@@ -24,6 +24,6 @@ if [[ $NETWORK_NODE = "True" ]]; then
     setup_develop $QUANTUM_DIR 
 fi
 if [[ $COMPUTE_NODE = "True" ]]; then
-    setup_develop $NOVA_DIR 
     setup_develop $QUANTUM_DIR 
+    setup_develop $NOVA_DIR 
 fi
