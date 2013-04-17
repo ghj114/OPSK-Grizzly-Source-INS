@@ -99,8 +99,8 @@ function configure_nova() {
         sed -i '/env libvirtd_opts/s/-d/-d -l/' /etc/init/libvirt-bin.conf
         sed -i '/libvirtd_opts/s/-d/-d -l/' /etc/default/libvirt-bin
         service $LIBVIRT_DAEMON restart
-        virsh net-destroy default
-        virsh net-undefine default
+        #virsh net-destroy default
+        #virsh net-undefine default
 
 
         # Instance Storage
@@ -155,15 +155,15 @@ function create_nova_conf() {
     # Show user_name and project_name instead of user_id and project_id
     iniset $NOVA_CONF DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_name)s] %(instance)s%(message)s"
 
-    VNCSERVER_LISTEN=${VNCSERVER_LISTEN=0.0.0.0}
-    VNCSERVER_PROXYCLIENT_ADDRESS=$COMPUTE_IP
-    iniset $NOVA_CONF DEFAULT vnc_enabled true
-    iniset $NOVA_CONF DEFAULT vncserver_listen "$VNCSERVER_LISTEN"
-    iniset $NOVA_CONF DEFAULT vncserver_proxyclient_address "$VNCSERVER_PROXYCLIENT_ADDRESS"
 
     if [ "$COMPUTE_NODE" == "True" ]; then
+        VNCSERVER_LISTEN=${VNCSERVER_LISTEN=0.0.0.0}
+        iniset $NOVA_CONF DEFAULT vnc_enabled true
+        iniset $NOVA_CONF DEFAULT vncserver_listen "$VNCSERVER_LISTEN"
         NOVNCPROXY_URL=${NOVNCPROXY_URL:-"http://$CONTROLLER_IP:6080/vnc_auto.html"}
         iniset $NOVA_CONF DEFAULT novncproxy_base_url "$NOVNCPROXY_URL"
+        VNCSERVER_PROXYCLIENT_ADDRESS=$COMPUTE_IP
+        iniset $NOVA_CONF DEFAULT vncserver_proxyclient_address "$VNCSERVER_PROXYCLIENT_ADDRESS"
     fi
     
     #iniset $NOVA_CONF DEFAULT ec2_dmz_host "$EC2_DMZ_HOST"
