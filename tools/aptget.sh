@@ -17,7 +17,6 @@ apt-get install -y bridge-utils pep8 pylint python-pip screen unzip wget psmisc 
 apt-get install -y lsof openssh-server openssl vim-nox locate python-virtualenv 
 apt-get install -y python-unittest2 iputils-ping wget curl tcpdump euca2ools tar python-netaddr
 apt-get install -y python-cmd2 # dist:precise
-apt-get install -y gcc
 
 if [[ $CONTROLLER_NODE = "True" ]]; then
 # 2. install -y rabbit-server:
@@ -67,10 +66,10 @@ fi
 
 if [[ $COMPUTE_NODE = "True" ]]; then
     apt-get install -y lvm2 open-iscsi open-iscsi-utils genisoimage sysfsutils sg3-utils # nova-compute
+    apt-get install python-dev libssl-dev python-pip git-core libxml2-dev libxslt-dev
+    apt-get install libmysqld-dev
     apt-get install -y gawk iptables ebtables sqlite3 sudo kvm libvirt-bin # NOPRIME
-    apt-get install -y python-libvirt
-    apt-get install -y openvswitch-switch
-    apt-get install -y python-migrate
+    apt-get install -y python-mox python-paste python-migrate python-gflags python-greenlet python-libvirt python-libxml2 python-routes python-netaddr
 fi
 
 
