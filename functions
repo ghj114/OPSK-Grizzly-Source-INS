@@ -22,7 +22,7 @@ function git_clone {
         cp -r $BASE_SOURCE -T $GIT_DEST
     fi
     cd $GIT_DEST
-    git fetch $GIT_REMOTE $GIT_REF && git checkout FETCH_HEAD
+    #git fetch $GIT_REMOTE $GIT_REF && git checkout FETCH_HEAD
 }
 
 #git_clone $1 $2 $3
